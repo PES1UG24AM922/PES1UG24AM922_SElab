@@ -44,7 +44,20 @@ It covers:
 
 [View Lab 2](./PES1UG24AM922_Lab2_SELab.pdf)
 
-### Lab 3
+### Lab 3 — Component Modelling & Architectural Pattern Selection
+
+Lab 3 focuses on evaluating architectural styles and designing a UML Component Diagram for a self-service coffee kiosk.
+
+It covers:
+
+* Comparison of Layered, Microservices, and Client-Server architectures
+* Selection and justification of a suitable architectural style
+* Identification of system components and their responsibilities
+* UML Component Diagram modelling
+* Provided and required interfaces
+* Component dependencies and data flow
+* Security and performance considerations
+* Architectural decision documentation
 
 [View Lab 3](./PES1UG24AM922_SELab3.pdf)
 
