@@ -42,10 +42,19 @@ class GameEngine:
             dx += self.player.speed
         self.player.move(dx, dy, WIDTH, HEIGHT)
 
+
     def update(self):
         collected = check_collection(self.player, self.coins)
+
         for coin in collected:
             self.score += coin.value
+
+        collected_ids = {id(coin) for coin in collected}
+        self.coins = [
+            coin for coin in self.coins
+            if id(coin) not in collected_ids
+        ]
+
 
     def draw(self, surface, font):
         from game import renderer
