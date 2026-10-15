@@ -1,3 +1,4 @@
+
 """
 renderer: all pygame drawing lives here, kept separate from game logic.
 """
@@ -12,11 +13,25 @@ COLOR_PLAYER = (80, 180, 255)
 COLOR_TEXT = (255, 255, 255)
 
 
-def draw_scene(surface, player, coins):
+def draw_scene(surface, player, coins, obstacles=None):
     surface.fill(COLOR_BG)
+
+    for obstacle in obstacles or []:
+        pygame.draw.rect(
+            surface, obstacle.color, obstacle.rect, border_radius=4
+        )
+
     for coin in coins:
-        pygame.draw.circle(surface, coin.color, (int(coin.x), int(coin.y)), coin.radius)
-    pygame.draw.rect(surface, COLOR_PLAYER, player.get_rect(), border_radius=4)
+        pygame.draw.circle(
+            surface,
+            coin.color,
+            (int(coin.x), int(coin.y)),
+            coin.radius,
+        )
+
+    pygame.draw.rect(
+        surface, COLOR_PLAYER, player.get_rect(), border_radius=4
+    )
 
 
 def draw_text(surface, font, text, pos, color=COLOR_TEXT):
@@ -25,5 +40,8 @@ def draw_text(surface, font, text, pos, color=COLOR_TEXT):
 
 def draw_banner(surface, font, text):
     surf = font.render(text, True, (255, 220, 80))
-    rect = surf.get_rect(center=(surface.get_width() // 2, surface.get_height() // 2))
+    rect = surf.get_rect(
+        center=(surface.get_width() // 2, surface.get_height() // 2)
+    )
     surface.blit(surf, rect)
+
