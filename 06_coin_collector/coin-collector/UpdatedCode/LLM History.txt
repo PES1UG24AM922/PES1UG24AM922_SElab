@@ -1,0 +1,510 @@
+
+"""
+renderer: all pygame drawing lives here, kept separate from game logic.
+"""
+
+import pygame
+
+WIDTH, HEIGHT = 700, 500
+WINDOW_SIZE = (WIDTH, HEIGHT)
+
+COLOR_BG = (35, 45, 35)
+COLOR_PLAYER = (80, 180, 255)
+COLOR_TEXT = (255, 255, 255)
+
+
+def draw_scene(surface, player, coins):
+    surface.fill(COLOR_BG)
+    for coin in coins:
+        pygame.draw.circle(surface, coin.color, (int(coin.x), int(coin.y)), coin.radius)
+    pygame.draw.rect(surface, COLOR_PLAYER, player.get_rect(), border_radius=4)
+
+
+def draw_text(surface, font, text, pos, color=COLOR_TEXT):
+    surface.blit(font.render(text, True, color), pos)
+
+
+def draw_banner(surface, font, text):
+    surf = font.render(text, True, (255, 220, 80))
+    rect = surf.get_rect(center=(surface.get_width() // 2, surface.get_height() // 2))
+    surface.blit(surf, rect)
+
+this is renderer.py . will anything change in this be brief and to the point
+…
+
+No changes are needed in renderer.py. ✅
+
+Your renderer already draws each coin using coin.color:
+pygame.draw.circle(surface, coin.color, (int(coin.x), int(coin.y)), coin.radius)
+
+This automatically displays bronze, silver, and gold coins in their respective colors.
+
+Only game_engine.py needs changes for Task 2. Keep coin.py, collection.py, and renderer.py unchanged.
+
+Task 3: Implement obstacles
+Add obstacles to the play area that the player must avoid while
+ &#xA; collecting coins. Colliding with an obstacle should have a clearly
+ &#xA; defined consequence (for example, losing a life). Obstacles should
+ &#xA; stay within the play area and interact correctly with the player.
+
+coins, collection, renderer and game engine are shared. what files should the changes be made and what are the changes
+
+For Task 3, you need to modify 2 existing files and add 1 new file. collection.py and coin.py do not need changes.
+Files to modify
+
+File
+	
+
+Action
+	
+
+Changes
+
+game/obstacle.py
+	
+
+Create
+	
+
+Define an Obstacle class with position, dimensions, a rectangle for collision detection, and a color.
+
+game/game_engine.py
+	
+
+Modify
+	
+
+Create obstacles inside the play area, initialize 3 lives, detect player-obstacle collisions, and subtract one life per collision event. Display Game Over when lives reach zero.
+
+game/renderer.py
+	
+
+Modify
+	
+
+Draw obstacles as clearly distinguishable rectangles. Update draw_scene() to accept the obstacles list and render it.
+
+game/coin.py
+	
+
+No change
+	
+
+Coin properties and behavior are unrelated to obstacles.
+
+game/collection.py
+	
+
+No change
+	
+
+Keep coin collision detection separate from obstacle collision detection.
+Important implementation details
+
+    Obstacle placement: Keep every obstacle fully inside the play area, using WIDTH and HEIGHT to constrain its coordinates.
+
+    Collision handling: Use player.get_rect().colliderect(obstacle.rect) to detect collisions. Ensure standing against an obstacle does not drain all three lives across consecutive frames.
+
+    Lives: Start with 3 lives and display the remaining count alongside the score.
+
+    Game Over: Prevent further gameplay when lives reach zero and display a game-over message.
+
+You can implement the life-loss consequence entirely inside game_engine.py, so you don't need to modify player.py unless you also want obstacles to physically block movement.
+
+Recommended approach: Create obstacle.py, modify game_engine.py for gameplay logic, and modify renderer.py for visualization. Check whether your main game loop needs a change only if it handles game-over or restart behavior separately.
+give required changes:
+
+game engine:
+"""
+GameEngine: owns the player and all coins.
+
+Starter version: one coin type, no obstacles, no timer yet. Coin
+collection also has a known bug (see how update uses check_collection
+below) that Task 1 asks you to fix - collected coins are never removed,
+so standing on one keeps awarding points every frame.
+"""
+
+import random
+import pygame
+
+from game.player import Player
+from game.coin import Coin
+from game.collection import check_collection
+from game.renderer import WIDTH, HEIGHT
+
+NUM_COINS = 6
+COIN_TYPES = [
+    (1, (156, 101, 54)),
+    (3, (192, 192, 192)),
+    (5, (255, 215, 0)),
+]
+
+
+class GameEngine:
+    def __init__(self):
+        self.player = Player(x=WIDTH / 2, y=HEIGHT / 2)
+        self.coins = [self._random_coin() for _ in range(NUM_COINS)]
+        self.score = 0
+
+    def _random_coin(self):
+    x = random.randint(30, WIDTH - 30)
+    y = random.randint(30, HEIGHT - 30)
+    value, color = random.choice(COIN_TYPES)
+    return Coin(x=x, y=y, radius=12, value=value, color=color)
+
+    def handle_input(self, keys_pressed):
+        dx = dy = 0
+        if keys_pressed[pygame.K_UP]:
+            dy -= self.player.speed
+        if keys_pressed[pygame.K_DOWN]:
+            dy += self.player.speed
+        if keys_pressed[pygame.K_LEFT]:
+            dx -= self.player.speed
+        if keys_pressed[pygame.K_RIGHT]:
+            dx += self.player.speed
+        self.player.move(dx, dy, WIDTH, HEIGHT)
+
+
+    def update(self):
+        collected = check_collection(self.player, self.coins)
+
+        for coin in collected:
+            self.score += coin.value
+
+        collected_ids = {id(coin) for coin in collected}
+        self.coins = [
+            coin for coin in self.coins
+            if id(coin) not in collected_ids
+        ]
+
+
+    def draw(self, surface, font):
+        from game import renderer
+        renderer.draw_scene(surface, self.player, self.coins)
+        renderer.draw_text(surface, font, f"Score: {self.score}", (10, 10))
+
+renderer:
+"""
+renderer: all pygame drawing lives here, kept separate from game logic.
+"""
+
+import pygame
+
+WIDTH, HEIGHT = 700, 500
+WINDOW_SIZE = (WIDTH, HEIGHT)
+
+COLOR_BG = (35, 45, 35)
+COLOR_PLAYER = (80, 180, 255)
+COLOR_TEXT = (255, 255, 255)
+
+
+def draw_scene(surface, player, coins):
+    surface.fill(COLOR_BG)
+    for coin in coins:
+        pygame.draw.circle(surface, coin.color, (int(coin.x), int(coin.y)), coin.radius)
+    pygame.draw.rect(surface, COLOR_PLAYER, player.get_rect(), border_radius=4)
+
+
+def draw_text(surface, font, text, pos, color=COLOR_TEXT):
+    surface.blit(font.render(text, True, color), pos)
+
+
+def draw_banner(surface, font, text):
+    surf = font.render(text, True, (255, 220, 80))
+    rect = surf.get_rect(center=(surface.get_width() // 2, surface.get_height() // 2))
+    surface.blit(surf, rect)
+
+player:
+"""
+Player: a simple square the player moves around with the arrow keys.
+"""
+
+import pygame
+
+
+class Player:
+    def __init__(self, x, y, size=28, speed=4):
+        self.x = x
+        self.y = y
+        self.size = size
+        self.speed = speed
+
+    def move(self, dx, dy, bounds_width, bounds_height):
+        self.x = max(self.size / 2, min(bounds_width - self.size / 2, self.x + dx))
+        self.y = max(self.size / 2, min(bounds_height - self.size / 2, self.y + dy))
+
+    def get_rect(self):
+        return pygame.Rect(
+            int(self.x - self.size / 2), int(self.y - self.size / 2),
+            self.size, self.size,
+        )
+
+(check if player changes required, else give only 3 changes)
+…
+
+You need 3 changes for Task 3: create game/obstacle.py, update game/game_engine.py, and update game/renderer.py. No changes are required in player.py, coin.py, or collection.py.
+
+The implementation below adds four obstacles, starts the player with three lives, removes one life when entering an obstacle, and prevents repeated life loss while continuously overlapping one.
+1. Create game/obstacle.py
+
+import pygame
+
+
+class Obstacle:
+    def __init__(self, x, y, width=60, height=30, color=(220, 65, 65)):
+        self.rect = pygame.Rect(x, y, width, height)
+        self.color = color
+
+2. Replace game/game_engine.py
+
+This version retains your bronze, silver, and gold coins and the Task 1 fix.
+
+"""
+GameEngine: owns the player, coins, and obstacles.
+"""
+
+import random
+import pygame
+
+from game.player import Player
+from game.coin import Coin
+from game.obstacle import Obstacle
+from game.collection import check_collection
+from game.renderer import WIDTH, HEIGHT
+
+NUM_COINS = 6
+NUM_OBSTACLES = 4
+STARTING_LIVES = 3
+
+COIN_TYPES = [
+    (1, (156, 101, 54)),
+    (3, (192, 192, 192)),
+    (5, (255, 215, 0)),
+]
+
+
+class GameEngine:
+    def __init__(self):
+        self.player = Player(x=WIDTH / 2, y=HEIGHT / 2)
+        self.coins = [self._random_coin() for _ in range(NUM_COINS)]
+        self.score = 0
+        self.lives = STARTING_LIVES
+        self.game_over = False
+        self._was_colliding = False
+        self.obstacles = []
+
+        for _ in range(NUM_OBSTACLES):
+3. Replace game/renderer.py
+
+The renderer now displays the obstacles in red and shows the Game Over banner when the player loses all lives.
+
+"""
+renderer: all pygame drawing lives here, kept separate from game logic.
+"""
+
+import pygame
+
+WIDTH, HEIGHT = 700, 500
+WINDOW_SIZE = (WIDTH, HEIGHT)
+
+COLOR_BG = (35, 45, 35)
+COLOR_PLAYER = (80, 180, 255)
+COLOR_TEXT = (255, 255, 255)
+
+
+def draw_scene(surface, player, coins, obstacles=None):
+    surface.fill(COLOR_BG)
+
+    for obstacle in obstacles or []:
+        pygame.draw.rect(
+            surface, obstacle.color, obstacle.rect, border_radius=4
+        )
+
+    for coin in coins:
+        pygame.draw.circle(
+            surface,
+            coin.color,
+            (int(coin.x), int(coin.y)),
+            coin.radius,
+        )
+
+    pygame.draw.rect(
+        surface, COLOR_PLAYER, player.get_rect(), border_radius=4
+    )
+
+
+Expected behavior
+
+    Four red rectangular obstacles appear within the play area.
+
+    Obstacles are initially positioned away from the player, coins, and one another.
+
+    Entering an obstacle costs one life. Remaining in contact does not repeatedly deduct lives; the player must leave the obstacle before another collision can cost a life.
+
+    At zero lives, movement and further game updates stop, and GAME OVER appears.
+
+    Coin collection and the bronze, silver, and gold scoring system continue working as before.
+
+Note: This implementation applies a life-loss penalty rather than physically blocking movement. Your existing player.py already provides the rectangle needed for collision detection, so it does not need modification.
+
+Task 4: Implement a timed round
+Add a 30-second countdown for the round. Display the remaining time
+ 
+ on screen. Once it reaches zero (or lives run out, once Task 3 is
+ 
+ done), stop the round, show the final score clearly, and provide a
+ 
+ way to start a new round with the score, lives, and timer all reset.
+
+For Task 4, update 3 files:
+
+    game/game_engine.py — manage the 30-second countdown, end the round, and reset the score, lives, timer, coins, and obstacles.
+
+    game/renderer.py — display the remaining time and final score.
+
+    The file containing your main Pygame loop (likely main.py) — handle a key press to start a new round after Game Over.
+
+No changes are required in player.py, coin.py, collection.py, or obstacle.py.
+1. Replace game/game_engine.py
+
+This preserves your previous coin and obstacle logic while adding the countdown and a reset() method.
+
+"""
+GameEngine: owns the player, coins, obstacles, score, lives, and timer.
+"""
+
+import random
+import pygame
+
+from game.player import Player
+from game.coin import Coin
+from game.obstacle import Obstacle
+from game.collection import check_collection
+from game.renderer import WIDTH, HEIGHT
+
+NUM_COINS = 6
+NUM_OBSTACLES = 4
+STARTING_LIVES = 3
+ROUND_DURATION = 30
+
+COIN_TYPES = [
+    (1, (156, 101, 54)),
+    (3, (192, 192, 192)),
+    (5, (255, 215, 0)),
+]
+
+
+class GameEngine:
+    def __init__(self):
+        self.reset()
+
+    def reset(self):
+        self.player = Player(x=WIDTH / 2, y=HEIGHT / 2)
+        self.coins = [self._random_coin() for _ in range(NUM_COINS)]
+        self.obstacles = []
+        self.score = 0
+        self.lives = STARTING_LIVES
+2. Update game/renderer.py
+
+Your existing draw_scene() already draws coins and obstacles. No changes are needed in that function. The engine now uses your existing draw_text() and draw_banner() functions to display the timer and final score.
+3. Modify your main game loop
+
+In the file where you handle pygame.event.get(), add this inside the event loop. Replace engine with your actual GameEngine variable name if it differs.
+
+if event.type == pygame.KEYDOWN:
+    if event.key == pygame.K_r and engine.game_over:
+        engine.reset()
+
+Keep your existing event handling, movement, update, drawing, and display-flip logic.
+Expected behavior
+
+    The round starts at 30 seconds and counts down automatically.
+
+    When time reaches zero or lives reach zero, gameplay stops.
+
+    The final score remains visible.
+
+    Pressing R starts a fresh round with 3 lives, 30 seconds, score 0, and newly generated coins and obstacles.
+
+One important detail: I haven't seen your main-loop file, so the restart snippet assumes your GameEngine instance is named engine. If you paste that file, I can show you exactly where to insert it.
+"""
+Coin Collector (Lab Starter)
+
+Run with:  python3 main.py
+
+Controls: Arrow keys to move.
+"""
+
+import pygame
+
+from game.game_engine import GameEngine
+from game.renderer import WINDOW_SIZE
+
+
+def main():
+    pygame.init()
+    screen = pygame.display.set_mode(WINDOW_SIZE)
+    pygame.display.set_caption("Coin Collector")
+    clock = pygame.time.Clock()
+    font = pygame.font.SysFont("consolas", 22)
+
+    engine = GameEngine()
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+
+        keys = pygame.key.get_pressed()
+        engine.handle_input(keys)
+        engine.update()
+        engine.draw(screen, font)
+
+        pygame.display.flip()
+        clock.tick(60)
+
+    pygame.quit()
+
+
+if __name__ == "__main__":
+    main()
+
+where should i do the changes?
+
+and what is the change in renderer?
+1. Change main.py
+
+Inside your existing for event in pygame.event.get(): loop, add the KEYDOWN condition. Your updated event loop should look like this:
+
+for event in pygame.event.get():
+    if event.type == pygame.QUIT:
+        running = False
+
+    elif event.type == pygame.KEYDOWN:
+        if event.key == pygame.K_r and engine.game_over:
+            engine.reset()
+
+Where: Replace the existing event-handling loop in main() with the code above. Leave the rest of main.py unchanged.
+
+Pressing R after the round ends calls engine.reset(), which resets the score, lives, timer, player, coins, and obstacles.
+2. What changes are needed in renderer.py?
+
+No additional changes are required for Task 4, provided you already applied the renderer changes from Task 3.
+
+Your renderer already contains:
+
+    draw_text() — displays the score, lives, countdown, and restart instruction.
+
+    draw_banner() — displays the Game Over message and final score.
+
+    draw_scene() — draws the player, coins, and obstacles.
+
+The updated GameEngine.draw() method calls these existing functions to display the timer and final score.
+
+Important: Ensure draw_scene() accepts four arguments, including obstacles:
+def draw_scene(surface, player, coins, obstacles=None):
+
+That is the change from Task 3, not a new change required for Task 4.
+
+
+
