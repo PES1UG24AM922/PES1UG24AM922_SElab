@@ -22,9 +22,15 @@ def main():
     engine = GameEngine()
     running = True
     while running:
+        
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_r and engine.game_over:
+                    engine.reset()
+
 
         keys = pygame.key.get_pressed()
         engine.handle_input(keys)

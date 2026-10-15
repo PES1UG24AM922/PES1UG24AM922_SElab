@@ -1,6 +1,6 @@
 
 """
-GameEngine: owns the player, coins, and obstacles.
+GameEngine: owns the player, coins, obstacles, score, lives, and timer.
 """
 
 import random
@@ -15,6 +15,7 @@ from game.renderer import WIDTH, HEIGHT
 NUM_COINS = 6
 NUM_OBSTACLES = 4
 STARTING_LIVES = 3
+ROUND_DURATION = 30
 
 COIN_TYPES = [
     (1, (156, 101, 54)),
@@ -25,16 +26,22 @@ COIN_TYPES = [
 
 class GameEngine:
     def __init__(self):
+        self.reset()
+
+    def reset(self):
         self.player = Player(x=WIDTH / 2, y=HEIGHT / 2)
         self.coins = [self._random_coin() for _ in range(NUM_COINS)]
+        self.obstacles = []
         self.score = 0
         self.lives = STARTING_LIVES
         self.game_over = False
         self._was_colliding = False
-        self.obstacles = []
 
         for _ in range(NUM_OBSTACLES):
             self.obstacles.append(self._random_obstacle())
+
+        self.start_time = pygame.time.get_ticks()
+        self.time_left = ROUND_DURATION
 
     def _random_coin(self):
         x = random.randint(30, WIDTH - 30)
@@ -54,10 +61,12 @@ class GameEngine:
             if obstacle.rect.colliderect(self.player.get_rect()):
                 continue
 
-            if any(obstacle.rect.colliderect(coin.get_rect()) for coin in self.coins):
+            if any(obstacle.rect.colliderect(coin.get_rect())
+                   for coin in self.coins):
                 continue
 
-            if any(obstacle.rect.colliderect(other.rect) for other in self.obstacles):
+            if any(obstacle.rect.colliderect(other.rect)
+                   for other in self.obstacles):
                 continue
 
             return obstacle
@@ -81,6 +90,13 @@ class GameEngine:
 
     def update(self):
         if self.game_over:
+            return
+
+        elapsed = (pygame.time.get_ticks() - self.start_time) // 1000
+        self.time_left = max(0, ROUND_DURATION - elapsed)
+
+        if self.time_left == 0:
+            self.game_over = True
             return
 
         collected = check_collection(self.player, self.coins)
@@ -114,9 +130,24 @@ class GameEngine:
         renderer.draw_scene(
             surface, self.player, self.coins, self.obstacles
         )
-        renderer.draw_text(surface, font, f"Score: {self.score}", (10, 10))
-        renderer.draw_text(surface, font, f"Lives: {self.lives}", (10, 35))
+        renderer.draw_text(
+            surface, font, f"Score: {self.score}", (10, 10)
+        )
+        renderer.draw_text(
+            surface, font, f"Lives: {self.lives}", (10, 35)
+        )
+        renderer.draw_text(
+            surface, font, f"Time: {self.time_left}s", (10, 60)
+        )
 
         if self.game_over:
-            renderer.draw_banner(surface, font, "GAME OVER")
+            renderer.draw_banner(
+                surface, font,
+                f"GAME OVER - Final Score: {self.score}"
+            )
+            renderer.draw_text(
+                surface, font, "Press R to start a new round",
+                (surface.get_width() // 2 - 125,
+                 surface.get_height() // 2 + 30)
+            )
 
