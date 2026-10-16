@@ -1,0 +1,11 @@
+************* Module hostel_allocation
+hostel_allocation.py:37:0: C0303: Trailing whitespace (trailing-whitespace)
+hostel_allocation.py:48:0: C0303: Trailing whitespace (trailing-whitespace)
+hostel_allocation.py:52:0: C0303: Trailing whitespace (trailing-whitespace)
+hostel_allocation.py:116:0: C0303: Trailing whitespace (trailing-whitespace)
+hostel_allocation.py:124:0: C0305: Trailing newlines (trailing-newlines)
+hostel_allocation.py:4:0: W0611: Unused import logging (unused-import)
+
+------------------------------------------------------------------
+Your code has been rated at 9.25/10 (previous run: 9.25/10, +0.00)
+
